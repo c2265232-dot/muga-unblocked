@@ -1,199 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Google Classroom</title>
-
-  <style>
-    :root {
-      --bg:#0f172a;
-      --card:#1e293b;
-      --hover:#334155;
-      --text:white;
-    }
-
-    body {
-      margin:0;
-      font-family:Arial;
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    header {
-      display:flex;
-      justify-content:space-between;
-      padding:10px;
-      background:#020617;
-      align-items:center;
-    }
-
-    button,input,select {
-      border:none;
-      border-radius:6px;
-      padding:6px;
-    }
-
-    .games-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-      gap:15px;
-      padding:20px;
-    }
-
-    .game-card {
-      background:var(--card);
-      padding:10px;
-      border-radius:12px;
-      cursor:pointer;
-      position:relative;
-      transition:0.2s;
-      text-align:center;
-    }
-
-    .game-card:hover {
-      transform:scale(1.07);
-      background:var(--hover);
-    }
-
-    .fav {
-      position:absolute;
-      right:8px;
-      top:5px;
-      cursor:pointer;
-    }
-
-    .filters {
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      padding:10px;
-      flex-wrap:wrap;
-    }
-
-    .modal {
-      position:fixed;
-      width:100%;
-      height:100%;
-      background:black;
-      top:0;
-      left:0;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .hidden {display:none;}
-    iframe {flex:1;border:none;}
-
-    .panel {
-      position:fixed;
-      right:-320px;
-      width:300px;
-      height:100%;
-      background:#020617;
-      padding:15px;
-      transition:0.3s;
-      overflow:auto;
-    }
-
-    .panel.open {right:0;}
-
-    .login {
-      position:fixed;
-      top:40%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      background:#020617;
-      padding:20px;
-      border-radius:10px;
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <input id="search" placeholder="Search...">
-
-  <div>
-    <button onclick="render()">🏠</button>
-    <button onclick="showFavorites()">⭐</button>
-    <button onclick="openProxy()">🌐</button>
-    <button onclick="togglePanel()">⚙️</button>
-    <span id="userDisplay"></span>
-  </div>
-</header>
-
-<div class="filters" id="filters"></div>
-<div class="games-grid" id="grid"></div>
-
-<!-- LOGIN -->
-<div id="loginBox" class="login">
-  <h3>Username</h3>
-  <input id="username">
-  <button onclick="login()">Enter</button>
-</div>
-
-<!-- GAME -->
-<div id="modal" class="modal hidden">
-  <div>
-    <button onclick="frame.requestFullscreen()">⛶</button>
-    <button onclick="closeGame()">Exit</button>
-  </div>
-  <iframe id="frame"></iframe>
-</div>
-
-<!-- PROXY -->
-<div id="proxyBox" class="modal hidden">
-  <div>
-    <input id="proxyUrl" placeholder="Enter URL">
-    <button onclick="loadProxy()">Go</button>
-    <button onclick="closeProxy()">Exit</button>
-  </div>
-  <iframe id="proxyFrame"></iframe>
-</div>
-
-<!-- SETTINGS -->
-<div id="panel" class="panel">
-  <h3>🎨 Colors</h3>
-  BG <input type="color" id="bgPick"><br>
-  Card <input type="color" id="cardPick"><br>
-  Text <input type="color" id="textPick"><br>
-
-  <h3>🕵️ Cloak</h3>
-  Title <input id="cloakTitle"><br>
-  Icon URL <input id="cloakIcon"><br>
-  <button onclick="applyCloak()">Apply</button>
-
-  <div id="adminPanel" style="display:none;">
-    <h3>👑 Admin</h3>
-    Name <input id="gName"><br>
-    URL <input id="gUrl"><br>
-    Category <input id="gCat"><br>
-    <button onclick="addGame()">Add Game</button>
-  </div>
-
-  <button onclick="resetAll()">Reset</button>
-</div>
-
 <script>
-let user=localStorage.getItem("user");
+/* ELEMENTS */
+const grid = document.getElementById("grid");
+const filters = document.getElementById("filters");
+const modal = document.getElementById("modal");
+const frame = document.getElementById("frame");
+const search = document.getElementById("search");
+const panel = document.getElementById("panel");
+const adminPanel = document.getElementById("adminPanel");
+const loginBox = document.getElementById("loginBox");
+const usernameInput = document.getElementById("username");
+const userDisplay = document.getElementById("userDisplay");
+const proxyBox = document.getElementById("proxyBox");
+const proxyFrame = document.getElementById("proxyFrame");
+const proxyUrl = document.getElementById("proxyUrl");
+
+/* USER */
+let user = localStorage.getItem("user");
+
 if(user){
   loginBox.style.display="none";
   userDisplay.innerText=user;
 }
 
 function login(){
-  user=username.value;
-  localStorage.setItem("user",user);
+  user = usernameInput.value;
+  localStorage.setItem("user", user);
   location.reload();
 }
 
-let key="data_"+user;
-let data=JSON.parse(localStorage.getItem(key)||"{}");
+/* DATA */
+let key = "data_" + user;
+let data = JSON.parse(localStorage.getItem(key) || "{}");
 
-data.fav=data.fav||[];
-data.games=data.games||[];
+data.fav = data.fav || [];
+data.games = data.games || [];
 
-let games=[
+/* 🎮 HUGE GAME LIST */
+let games = [
   {name:"Slope",url:"https://3kh0.github.io/projects/slope/",cat:"Arcade"},
   {name:"Run 3",url:"https://3kh0.github.io/projects/run3/",cat:"Arcade"},
   {name:"Moto X3M",url:"https://3kh0.github.io/projects/motox3m/",cat:"Driving"},
@@ -219,111 +62,162 @@ let games=[
   {name:"Crossy Road",url:"https://3kh0.github.io/projects/crossy-road/",cat:"Arcade"},
   {name:"World's Hardest Game",url:"https://3kh0.github.io/projects/worlds-hardest-game/",cat:"Puzzle"},
   {name:"Doge Miner",url:"https://3kh0.github.io/projects/doge-miner/",cat:"Idle"},
-  ...Array.from({length:50},(_,i)=>({
+  {name:"Bloons Tower Defense",url:"https://3kh0.github.io/projects/bloonstd/",cat:"Strategy"},
+  {name:"Stack",url:"https://3kh0.github.io/projects/stack/",cat:"Arcade"},
+  {name:"Bottle Flip 3D",url:"https://3kh0.github.io/projects/bottle-flip-3d/",cat:"Arcade"},
+  {name:"Time Shooter",url:"https://3kh0.github.io/projects/time-shooter/",cat:"Shooter"},
+
+  /* 🔥 MASS EXPANSION */
+  ...Array.from({length:70},(_,i)=>({
     name:"Extra Game "+(i+1),
     url:"https://3kh0.github.io/projects/slope/",
     cat:"Arcade"
   })),
+
   ...data.games
 ];
 
-function save(){localStorage.setItem(key,JSON.stringify(data));}
+/* SAVE */
+function save(){
+  localStorage.setItem(key, JSON.stringify(data));
+}
 
-function render(list=games){
-  grid.innerHTML="";
+/* RENDER */
+function render(list = games){
+  grid.innerHTML = "";
+
   list.forEach(g=>{
-    let d=document.createElement("div");
-    d.className="game-card";
+    const d = document.createElement("div");
+    d.className = "game-card";
 
-    d.innerHTML=`
+    d.innerHTML = `
       <div class="fav" onclick="fav(event,'${g.name}')">
-        ${data.fav.includes(g.name)?"⭐":"☆"}
+        ${data.fav.includes(g.name) ? "⭐" : "☆"}
       </div>
       <p>${g.name}</p>
+      <small>${g.cat}</small>
     `;
 
-    d.onclick=()=>{frame.src=g.url;modal.classList.remove("hidden");};
+    d.onclick = () => {
+      frame.src = g.url;
+      modal.classList.remove("hidden");
+    };
+
     grid.appendChild(d);
   });
 }
 
-function fav(e,n){
+/* FAVORITES */
+function fav(e, name){
   e.stopPropagation();
-  if(data.fav.includes(n)){
-    data.fav=data.fav.filter(f=>f!=n);
-  } else data.fav.push(n);
+
+  if(data.fav.includes(name)){
+    data.fav = data.fav.filter(f => f !== name);
+  } else {
+    data.fav.push(name);
+  }
+
   save();
   render();
 }
 
 function showFavorites(){
-  render(games.filter(g=>data.fav.includes(g.name)));
+  render(games.filter(g => data.fav.includes(g.name)));
 }
 
-search.oninput=()=>{
-  let q=search.value.toLowerCase();
-  render(games.filter(g=>g.name.toLowerCase().includes(q)));
+/* SEARCH */
+search.oninput = () => {
+  const q = search.value.toLowerCase();
+  render(games.filter(g => g.name.toLowerCase().includes(q)));
 };
 
+/* GAME */
 function closeGame(){
   modal.classList.add("hidden");
-  frame.src="";
+  frame.src = "";
 }
 
-function openProxy(){proxyBox.classList.remove("hidden");}
-function closeProxy(){proxyBox.classList.add("hidden");}
+/* PROXY */
+function openProxy(){ proxyBox.classList.remove("hidden"); }
+function closeProxy(){ proxyBox.classList.add("hidden"); }
+
 function loadProxy(){
-  proxyFrame.src=proxyUrl.value.startsWith("http")?proxyUrl.value:"https://"+proxyUrl.value;
+  let url = proxyUrl.value;
+  if(!url.startsWith("http")) url = "https://" + url;
+  proxyFrame.src = url;
 }
 
-function togglePanel(){panel.classList.toggle("open");}
+/* SETTINGS */
+function togglePanel(){
+  panel.classList.toggle("open");
+}
 
-bgPick.oninput=()=>document.body.style.background=bgPick.value;
-cardPick.oninput=()=>document.documentElement.style.setProperty("--card",cardPick.value);
-textPick.oninput=()=>document.body.style.color=textPick.value;
+document.getElementById("bgPick").oninput = e => {
+  document.body.style.background = e.target.value;
+};
 
+document.getElementById("cardPick").oninput = e => {
+  document.documentElement.style.setProperty("--card", e.target.value);
+};
+
+document.getElementById("textPick").oninput = e => {
+  document.body.style.color = e.target.value;
+};
+
+/* CLOAK */
 function applyCloak(){
-  document.title=cloakTitle.value||document.title;
-  if(cloakIcon.value){
-    let link=document.querySelector("link[rel='icon']")||document.createElement("link");
-    link.rel="icon";
-    link.href=cloakIcon.value;
+  const title = document.getElementById("cloakTitle").value;
+  const icon = document.getElementById("cloakIcon").value;
+
+  if(title) document.title = title;
+
+  if(icon){
+    let link = document.querySelector("link[rel='icon']") || document.createElement("link");
+    link.rel = "icon";
+    link.href = icon;
     document.head.appendChild(link);
   }
 }
 
-if(user==="hxebdebs55"){
-  adminPanel.style.display="block";
+/* ADMIN */
+function checkAdmin(){
+  if(user === "hxebdebs55"){
+    adminPanel.style.display = "block";
+  }
 }
 
 function addGame(){
-  data.games.push({
-    name:gName.value,
-    url:gUrl.value,
-    cat:gCat.value
-  });
+  const name = document.getElementById("gName").value;
+  const url = document.getElementById("gUrl").value;
+  const cat = document.getElementById("gCat").value;
+
+  data.games.push({name, url, cat});
   save();
   location.reload();
 }
 
+/* RESET */
 function resetAll(){
   localStorage.clear();
   location.reload();
 }
 
+/* FILTERS */
 function buildFilters(){
-  let cats=[...new Set(games.map(g=>g.cat))];
+  const cats = [...new Set(games.map(g=>g.cat))];
+
+  filters.innerHTML = "";
+
   cats.forEach(c=>{
-    let b=document.createElement("button");
-    b.innerText=c;
-    b.onclick=()=>render(games.filter(g=>g.cat==c));
+    const b = document.createElement("button");
+    b.innerText = c;
+    b.onclick = () => render(games.filter(g=>g.cat===c));
     filters.appendChild(b);
   });
 }
 
+/* INIT */
+checkAdmin();
 render();
 buildFilters();
 </script>
-
-</body>
-</html>
