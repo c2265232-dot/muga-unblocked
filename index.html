@@ -10,7 +10,6 @@
       --card:#111827;
       --hover:#1f2937;
       --text:#e5e7eb;
-      --accent:#3b82f6;
     }
 
     body{
@@ -23,71 +22,51 @@
 
     /* SIDEBAR */
     .sidebar{
-      width:220px;
+      width:230px;
+      height:100vh;
+      position:fixed;
       background:var(--sidebar);
       padding:15px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      transition:0.3s;
     }
 
-    .logo{
-      font-size:20px;
-      font-weight:bold;
-      margin-bottom:10px;
+    .sidebar.hidden{
+      transform:translateX(-100%);
     }
 
-    .nav-btn{
+    .nav{
       padding:10px;
       border-radius:10px;
       cursor:pointer;
     }
 
-    .nav-btn:hover{
+    .nav:hover{
       background:var(--hover);
     }
 
     /* MAIN */
     .main{
-      flex:1;
-      display:flex;
-      flex-direction:column;
+      margin-left:230px;
+      width:100%;
+      transition:0.3s;
     }
 
+    .main.full{margin-left:0;}
+
     header{
-      padding:15px;
+      padding:10px;
       display:flex;
-      flex-direction:column;
-      align-items:center;
       gap:10px;
-      border-bottom:1px solid #1f2937;
+      justify-content:center;
     }
 
     input{
-      width:350px;
       padding:10px;
+      width:300px;
       border-radius:10px;
       border:none;
       background:#111827;
       color:white;
-    }
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .tab{
-      padding:6px 12px;
-      border-radius:999px;
-      background:var(--card);
-      cursor:pointer;
-      font-size:14px;
-    }
-
-    .tab.active{
-      background:var(--accent);
     }
 
     .grid{
@@ -99,25 +78,22 @@
 
     .card{
       background:var(--card);
-      border-radius:16px;
       padding:20px;
-      text-align:center;
+      border-radius:12px;
       cursor:pointer;
+      text-align:center;
       position:relative;
-      transition:0.2s;
     }
 
     .card:hover{
-      transform:translateY(-6px);
       background:var(--hover);
-      box-shadow:0 10px 25px rgba(0,0,0,0.4);
+      transform:translateY(-5px);
     }
 
     .fav{
       position:absolute;
-      top:8px;
+      top:5px;
       right:10px;
-      cursor:pointer;
     }
 
     /* MODAL */
@@ -142,9 +118,22 @@
       background:#020617;
       padding:15px;
       transition:0.3s;
+      overflow:auto;
     }
 
     .panel.open{right:0;}
+
+    /* LOGIN */
+    .login{
+      position:fixed;
+      top:40%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      background:#020617;
+      padding:20px;
+      border-radius:10px;
+      z-index:999;
+    }
 
     /* LOADER */
     #loader{
@@ -171,43 +160,50 @@
 
 <div id="loader">Loading...</div>
 
-<div class="sidebar">
-  <div class="logo">🎮 Games</div>
-  <div class="nav-btn" onclick="setTab('all')">🏠 Home</div>
-  <div class="nav-btn" onclick="setTab('favorites')">⭐ Favorites</div>
-  <div class="nav-btn" onclick="setTab('recent')">🕒 Recent</div>
-  <div class="nav-btn" onclick="openProxy()">🌐 Proxy</div>
-  <div class="nav-btn" onclick="togglePanel()">⚙️ Settings</div>
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar">
+  <h3>🎮 Games</h3>
+  <div class="nav" onclick="setView('all')">🏠 Home</div>
+  <div class="nav" onclick="setView('favorites')">⭐ Favorites</div>
+  <div class="nav" onclick="setView('recent')">🕒 Recent</div>
+  <div class="nav" onclick="openProxy()">🌐 Proxy</div>
+  <div class="nav" onclick="togglePanel()">⚙️ Settings</div>
+  <div class="nav" onclick="toggleSidebar()">⬅ Hide</div>
+  <hr>
+  <div id="userDisplay"></div>
 </div>
 
-<div class="main">
+<div id="main" class="main">
 
 <header>
+  <button onclick="toggleSidebar()">☰</button>
   <input id="search" placeholder="Search games...">
-  <div class="tabs" id="tabs"></div>
 </header>
 
 <div id="grid" class="grid"></div>
 
 </div>
 
+<!-- LOGIN -->
+<div id="loginBox" class="login">
+  <h3>Login</h3>
+  <input id="username" placeholder="Username">
+  <button onclick="login()">Enter</button>
+</div>
+
 <!-- GAME -->
 <div id="modal" class="modal hidden">
-  <div>
-    <button onclick="frame.requestFullscreen()">⛶</button>
-    <button onclick="closeGame()">Exit</button>
-  </div>
+  <button onclick="frame.requestFullscreen()">⛶</button>
+  <button onclick="closeGame()">Exit</button>
   <iframe id="frame"></iframe>
 </div>
 
 <!-- PROXY -->
 <div id="proxyBox" class="modal hidden">
-  <div>
-    <input id="proxyUrl" placeholder="Search or URL">
-    <button onclick="loadProxy()">Go</button>
-    <button onclick="proxyFrame.requestFullscreen()">⛶</button>
-    <button onclick="closeProxy()">Exit</button>
-  </div>
+  <input id="proxyUrl" placeholder="Search or URL">
+  <button onclick="loadProxy()">Go</button>
+  <button onclick="proxyFrame.requestFullscreen()">⛶</button>
+  <button onclick="closeProxy()">Exit</button>
   <iframe id="proxyFrame"></iframe>
 </div>
 
@@ -217,29 +213,58 @@
   BG <input type="color" id="bgPick"><br><br>
   Card <input type="color" id="cardPick"><br><br>
   Text <input type="color" id="textPick"><br><br>
+
+  <h3>Tab Cloak</h3>
+  Title <input id="cloakTitle"><br>
+  Icon URL <input id="cloakIcon"><br>
+  <button onclick="applyCloak()">Apply</button>
+
+  <div id="adminPanel" style="display:none;">
+    <h3>Admin</h3>
+    Name <input id="gName"><br>
+    URL <input id="gUrl"><br>
+    <button onclick="addGame()">Add Game</button>
+  </div>
 </div>
 
 <script>
-const grid = document.getElementById("grid");
-const tabs = document.getElementById("tabs");
-const frame = document.getElementById("frame");
-const modal = document.getElementById("modal");
-const proxyBox = document.getElementById("proxyBox");
-const proxyFrame = document.getElementById("proxyFrame");
-const proxyUrl = document.getElementById("proxyUrl");
-const loader = document.getElementById("loader");
+const grid=document.getElementById("grid");
+const frame=document.getElementById("frame");
+const modal=document.getElementById("modal");
+const loader=document.getElementById("loader");
 
-/* STATE */
-let currentTab="all";
-let favorites=JSON.parse(localStorage.getItem("fav")||"[]");
-let recent=JSON.parse(localStorage.getItem("recent")||"[]");
-let settings=JSON.parse(localStorage.getItem("settings")||"{}");
+/* USER SYSTEM */
+let users=JSON.parse(localStorage.getItem("users")||"{}");
+let currentUser=localStorage.getItem("currentUser");
+
+function login(){
+  let name=username.value;
+  if(!users[name]){
+    users[name]={favorites:[],recent:[]};
+  }
+  localStorage.setItem("users",JSON.stringify(users));
+  localStorage.setItem("currentUser",name);
+  location.reload();
+}
+
+if(currentUser){
+  loginBox.style.display="none";
+  userDisplay.innerText=currentUser;
+}
+
+/* ADMIN */
+if(currentUser==="hxebdebs55"){
+  adminPanel.style.display="block";
+}
 
 /* SETTINGS */
+let settings=JSON.parse(localStorage.getItem("settings")||"{}");
+
 function applySettings(){
   if(settings.bg) document.body.style.background=settings.bg;
   if(settings.card) document.documentElement.style.setProperty("--card",settings.card);
   if(settings.text) document.body.style.color=settings.text;
+  if(settings.title) document.title=settings.title;
 }
 function saveSettings(){localStorage.setItem("settings",JSON.stringify(settings));}
 
@@ -247,59 +272,80 @@ bgPick.oninput=e=>{settings.bg=e.target.value;applySettings();saveSettings();}
 cardPick.oninput=e=>{settings.card=e.target.value;applySettings();saveSettings();}
 textPick.oninput=e=>{settings.text=e.target.value;applySettings();saveSettings();}
 
-/* LOADER */
-function showLoader(){loader.classList.add("show");}
-function hideLoader(){setTimeout(()=>loader.classList.remove("show"),300);}
+function applyCloak(){
+  settings.title=cloakTitle.value;
+  settings.icon=cloakIcon.value;
+  let link=document.createElement("link");
+  link.rel="icon";
+  link.href=settings.icon;
+  document.head.appendChild(link);
+  applySettings();
+  saveSettings();
+}
+
+/* SIDEBAR */
+function toggleSidebar(){
+  sidebar.classList.toggle("hidden");
+  main.classList.toggle("full");
+}
 
 /* GAMES */
 let games=[
-  {name:"Slope",cat:"Arcade",url:"https://3kh0.github.io/projects/slope/"},
-  {name:"Run 3",cat:"Arcade",url:"https://3kh0.github.io/projects/run3/"},
-  {name:"Krunker",cat:"Shooter",url:"https://krunker.io"},
-  {name:"YoHoHo.io",cat:"Multiplayer",url:"https://yohoho.io"},
-  {name:"Crazy Cattle 3D",cat:"3D",url:"https://crazy-cattle.github.io/"},
-  {name:"Drift Hunters",cat:"Driving",url:"https://3kh0.github.io/projects/drift-hunters/"},
-  {name:"Moto X3M",cat:"Driving",url:"https://3kh0.github.io/projects/motox3m/"},
-  {name:"Tunnel Rush",cat:"Arcade",url:"https://3kh0.github.io/projects/tunnel-rush/"}
+  {name:"Slope",url:"https://3kh0.github.io/projects/slope/"},
+  {name:"Run 3",url:"https://3kh0.github.io/projects/run3/"},
+  {name:"Krunker",url:"https://krunker.io"},
+  {name:"YoHoHo.io",url:"https://yohoho.io"},
+  {name:"Crazy Cattle 3D",url:"https://crazy-cattle.github.io/"},
+  {name:"Drift Hunters",url:"https://3kh0.github.io/projects/drift-hunters/"},
+  {name:"Moto X3M",url:"https://3kh0.github.io/projects/motox3m/"},
+  {name:"Tunnel Rush",url:"https://3kh0.github.io/projects/tunnel-rush/"},
+  ...JSON.parse(localStorage.getItem("customGames")||"[]")
 ];
 
-/* TABS */
-function buildTabs(){
-  let cats=["all","favorites","recent",...new Set(games.map(g=>g.cat))];
-  tabs.innerHTML="";
-  cats.forEach(c=>{
-    let t=document.createElement("div");
-    t.className="tab"+(c===currentTab?" active":"");
-    t.innerText=c;
-    t.onclick=()=>setTab(c);
-    tabs.appendChild(t);
-  });
+/* ADMIN ADD */
+function addGame(){
+  let list=JSON.parse(localStorage.getItem("customGames")||"[]");
+  list.push({name:gName.value,url:gUrl.value});
+  localStorage.setItem("customGames",JSON.stringify(list));
+  location.reload();
 }
 
-function setTab(t){
-  currentTab=t;
-  buildTabs();
+/* VIEW */
+let view="all";
+
+function setView(v){
+  view=v;
   render();
 }
 
-/* FAVORITES */
+/* FAVORITES + RECENT */
 function toggleFav(e,name){
   e.stopPropagation();
-  if(favorites.includes(name)){
-    favorites=favorites.filter(f=>f!==name);
-  } else favorites.push(name);
-  localStorage.setItem("fav",JSON.stringify(favorites));
+  let u=users[currentUser];
+  if(u.favorites.includes(name)){
+    u.favorites=u.favorites.filter(f=>f!==name);
+  } else u.favorites.push(name);
+  saveUsers();
   render();
 }
+
+function saveUsers(){
+  localStorage.setItem("users",JSON.stringify(users));
+}
+
+/* LOADER */
+function showLoader(){loader.classList.add("show");}
+function hideLoader(){setTimeout(()=>loader.classList.remove("show"),300);}
 
 /* RENDER */
 function render(){
   grid.innerHTML="";
   let list=games;
 
-  if(currentTab==="favorites") list=games.filter(g=>favorites.includes(g.name));
-  else if(currentTab==="recent") list=games.filter(g=>recent.includes(g.name));
-  else if(currentTab!=="all") list=games.filter(g=>g.cat===currentTab);
+  let u=users[currentUser]||{favorites:[],recent:[]};
+
+  if(view==="favorites") list=games.filter(g=>u.favorites.includes(g.name));
+  if(view==="recent") list=games.filter(g=>u.recent.includes(g.name));
 
   let q=search.value?.toLowerCase()||"";
   list=list.filter(g=>g.name.toLowerCase().includes(q));
@@ -310,7 +356,7 @@ function render(){
 
     d.innerHTML=`
       <div class="fav" onclick="toggleFav(event,'${g.name}')">
-        ${favorites.includes(g.name)?"⭐":"☆"}
+        ${u.favorites.includes(g.name)?"⭐":"☆"}
       </div>
       <p>${g.name}</p>
     `;
@@ -320,10 +366,10 @@ function render(){
       frame.src=g.url;
       modal.classList.remove("hidden");
 
-      if(!recent.includes(g.name)){
-        recent.unshift(g.name);
-        recent=recent.slice(0,10);
-        localStorage.setItem("recent",JSON.stringify(recent));
+      if(!u.recent.includes(g.name)){
+        u.recent.unshift(g.name);
+        u.recent=u.recent.slice(0,10);
+        saveUsers();
       }
 
       frame.onload=hideLoader;
@@ -333,10 +379,8 @@ function render(){
   });
 }
 
-/* SEARCH */
 search.oninput=render;
 
-/* GAME */
 function closeGame(){
   modal.classList.add("hidden");
   frame.src="";
@@ -353,14 +397,13 @@ function loadProxy(){
   proxyFrame.onload=hideLoader;
 }
 
-/* SETTINGS PANEL */
+/* PANEL */
 function togglePanel(){
-  document.getElementById("panel").classList.toggle("open");
+  panel.classList.toggle("open");
 }
 
 /* INIT */
 applySettings();
-buildTabs();
 render();
 </script>
 
