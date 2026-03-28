@@ -5,118 +5,106 @@
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --hover: #334155;
-      --text: white;
+      --bg:#0f172a;
+      --card:#1e293b;
+      --hover:#334155;
+      --text:white;
     }
 
     body {
-      margin: 0;
-      font-family: Arial;
-      background: var(--bg);
-      color: var(--text);
-      transition: 0.3s;
+      margin:0;
+      font-family:Arial;
+      background:var(--bg);
+      color:var(--text);
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background: #020617;
-      align-items: center;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+      background:#020617;
+      align-items:center;
     }
 
-    input, select {
-      padding: 6px;
-      border-radius: 6px;
-      border: none;
-    }
-
-    button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+    button,input,select {
+      border:none;
+      border-radius:6px;
+      padding:6px;
     }
 
     .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 15px;
-      padding: 20px;
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:15px;
+      padding:20px;
     }
 
     .game-card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 10px;
-      cursor: pointer;
-      text-align: center;
-      transition: 0.2s;
-      position: relative;
+      background:var(--card);
+      padding:10px;
+      border-radius:12px;
+      cursor:pointer;
+      position:relative;
+      transition:0.2s;
+      text-align:center;
     }
 
     .game-card:hover {
-      transform: scale(1.07);
-      background: var(--hover);
+      transform:scale(1.07);
+      background:var(--hover);
     }
 
     .fav {
-      position: absolute;
-      right: 8px;
-      top: 5px;
-      cursor: pointer;
+      position:absolute;
+      right:8px;
+      top:5px;
+      cursor:pointer;
     }
 
     .filters {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 10px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      padding:10px;
+      flex-wrap:wrap;
     }
 
     .modal {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      background: black;
-      top: 0;
-      left: 0;
-      display: flex;
-      flex-direction: column;
+      position:fixed;
+      width:100%;
+      height:100%;
+      background:black;
+      top:0;
+      left:0;
+      display:flex;
+      flex-direction:column;
     }
 
-    .hidden { display:none; }
-
-    iframe {
-      flex:1;
-      border:none;
-    }
+    .hidden {display:none;}
+    iframe {flex:1;border:none;}
 
     .panel {
-      position: fixed;
-      right: -320px;
-      width: 300px;
-      height: 100%;
-      background: #020617;
-      transition: 0.3s;
-      padding: 15px;
+      position:fixed;
+      right:-320px;
+      width:300px;
+      height:100%;
+      background:#020617;
+      padding:15px;
+      transition:0.3s;
+      overflow:auto;
     }
 
-    .panel.open { right:0; }
+    .panel.open {right:0;}
 
     .login {
-      position: fixed;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%,-50%);
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
+      position:fixed;
+      top:40%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      background:#020617;
+      padding:20px;
+      border-radius:10px;
     }
-
   </style>
 </head>
 
@@ -126,9 +114,11 @@
   <input id="search" placeholder="Search...">
 
   <div>
-    <span id="userDisplay"></span>
+    <button onclick="render()">🏠</button>
     <button onclick="showFavorites()">⭐</button>
+    <button onclick="openProxy()">🌐</button>
     <button onclick="togglePanel()">⚙️</button>
+    <span id="userDisplay"></span>
   </div>
 </header>
 
@@ -137,7 +127,7 @@
 
 <!-- LOGIN -->
 <div id="loginBox" class="login">
-  <h3>Enter Username</h3>
+  <h3>Username</h3>
   <input id="username">
   <button onclick="login()">Enter</button>
 </div>
@@ -151,26 +141,41 @@
   <iframe id="frame"></iframe>
 </div>
 
+<!-- PROXY -->
+<div id="proxyBox" class="modal hidden">
+  <div>
+    <input id="proxyUrl" placeholder="Enter URL">
+    <button onclick="loadProxy()">Go</button>
+    <button onclick="closeProxy()">Exit</button>
+  </div>
+  <iframe id="proxyFrame"></iframe>
+</div>
+
 <!-- SETTINGS -->
 <div id="panel" class="panel">
-  <h3>Colors</h3>
+  <h3>🎨 Colors</h3>
   BG <input type="color" id="bgPick"><br>
   Card <input type="color" id="cardPick"><br>
   Text <input type="color" id="textPick"><br>
 
-  <h3>Cloak</h3>
-  <select id="cloak">
-    <option value="none">None</option>
-    <option value="google">Google</option>
-    <option value="classroom">Classroom</option>
-  </select>
+  <h3>🕵️ Cloak</h3>
+  Title <input id="cloakTitle"><br>
+  Icon URL <input id="cloakIcon"><br>
   <button onclick="applyCloak()">Apply</button>
+
+  <div id="adminPanel" style="display:none;">
+    <h3>👑 Admin</h3>
+    Name <input id="gName"><br>
+    URL <input id="gUrl"><br>
+    Category <input id="gCat"><br>
+    <button onclick="addGame()">Add Game</button>
+  </div>
 
   <button onclick="resetAll()">Reset</button>
 </div>
 
 <script>
-let user = localStorage.getItem("user");
+let user=localStorage.getItem("user");
 if(user){
   loginBox.style.display="none";
   userDisplay.innerText=user;
@@ -182,29 +187,47 @@ function login(){
   location.reload();
 }
 
-let key = "data_"+user;
-let data = JSON.parse(localStorage.getItem(key)||"{}");
+let key="data_"+user;
+let data=JSON.parse(localStorage.getItem(key)||"{}");
 
-let games = [
+data.fav=data.fav||[];
+data.games=data.games||[];
+
+let games=[
   {name:"Slope",url:"https://3kh0.github.io/projects/slope/",cat:"Arcade"},
   {name:"Run 3",url:"https://3kh0.github.io/projects/run3/",cat:"Arcade"},
-  {name:"YoHoHo.io",url:"https://yohoho.io",cat:"Multiplayer"},
-  {name:"Crazy Cattle 3D",url:"https://github.com/search?q=crazy+cattle+3d&type=repositories",cat:"3D"},
+  {name:"Moto X3M",url:"https://3kh0.github.io/projects/motox3m/",cat:"Driving"},
+  {name:"Drift Hunters",url:"https://3kh0.github.io/projects/drift-hunters/",cat:"Driving"},
+  {name:"Tunnel Rush",url:"https://3kh0.github.io/projects/tunnel-rush/",cat:"Arcade"},
+  {name:"Snow Rider 3D",url:"https://3kh0.github.io/projects/snow-rider-3d/",cat:"Arcade"},
+  {name:"Basketball Stars",url:"https://3kh0.github.io/projects/basketball-stars/",cat:"Sports"},
+  {name:"Retro Bowl",url:"https://3kh0.github.io/projects/retro-bowl/",cat:"Sports"},
+  {name:"Stickman Hook",url:"https://3kh0.github.io/projects/stickman-hook/",cat:"Arcade"},
+  {name:"Subway Surfers",url:"https://3kh0.github.io/projects/subway-surfers/",cat:"Arcade"},
+  {name:"Temple Run 2",url:"https://3kh0.github.io/projects/temple-run-2/",cat:"Arcade"},
+  {name:"Fireboy & Watergirl",url:"https://3kh0.github.io/projects/fireboy-watergirl-forest/",cat:"Puzzle"},
+  {name:"Tetris",url:"https://3kh0.github.io/projects/tetris/",cat:"Puzzle"},
+  {name:"FNF",url:"https://3kh0.github.io/projects/fnf/",cat:"Music"},
+  {name:"Geometry Dash",url:"https://3kh0.github.io/projects/geometry-dash/",cat:"Arcade"},
   {name:"Krunker",url:"https://krunker.io",cat:"Shooter"},
   {name:"Shell Shockers",url:"https://3kh0.github.io/projects/shell-shockers/",cat:"Shooter"},
-
+  {name:"1v1.LOL",url:"https://3kh0.github.io/projects/1v1lol/",cat:"Shooter"},
+  {name:"YoHoHo.io",url:"https://yohoho.io",cat:"Multiplayer"},
+  {name:"Crazy Cattle 3D",url:"https://crazy-cattle.github.io/",cat:"3D"},
+  {name:"Minecraft Classic",url:"https://classic.minecraft.net/",cat:"Sandbox"},
+  {name:"Idle Breakout",url:"https://3kh0.github.io/projects/idle-breakout/",cat:"Idle"},
+  {name:"Crossy Road",url:"https://3kh0.github.io/projects/crossy-road/",cat:"Arcade"},
+  {name:"World's Hardest Game",url:"https://3kh0.github.io/projects/worlds-hardest-game/",cat:"Puzzle"},
+  {name:"Doge Miner",url:"https://3kh0.github.io/projects/doge-miner/",cat:"Idle"},
   ...Array.from({length:50},(_,i)=>({
-    name:"Game "+(i+1),
+    name:"Extra Game "+(i+1),
     url:"https://3kh0.github.io/projects/slope/",
     cat:"Arcade"
-  }))
+  })),
+  ...data.games
 ];
 
-data.fav = data.fav || [];
-
-function save(){
-  localStorage.setItem(key,JSON.stringify(data));
-}
+function save(){localStorage.setItem(key,JSON.stringify(data));}
 
 function render(list=games){
   grid.innerHTML="";
@@ -247,17 +270,40 @@ function closeGame(){
   frame.src="";
 }
 
-function togglePanel(){
-  panel.classList.toggle("open");
+function openProxy(){proxyBox.classList.remove("hidden");}
+function closeProxy(){proxyBox.classList.add("hidden");}
+function loadProxy(){
+  proxyFrame.src=proxyUrl.value.startsWith("http")?proxyUrl.value:"https://"+proxyUrl.value;
 }
 
-bgPick.oninput=()=>{document.body.style.background=bgPick.value;}
-cardPick.oninput=()=>{document.documentElement.style.setProperty("--card",cardPick.value);}
-textPick.oninput=()=>{document.body.style.color=textPick.value;}
+function togglePanel(){panel.classList.toggle("open");}
+
+bgPick.oninput=()=>document.body.style.background=bgPick.value;
+cardPick.oninput=()=>document.documentElement.style.setProperty("--card",cardPick.value);
+textPick.oninput=()=>document.body.style.color=textPick.value;
 
 function applyCloak(){
-  if(cloak.value=="google") document.title="Google";
-  if(cloak.value=="classroom") document.title="Google Classroom";
+  document.title=cloakTitle.value||document.title;
+  if(cloakIcon.value){
+    let link=document.querySelector("link[rel='icon']")||document.createElement("link");
+    link.rel="icon";
+    link.href=cloakIcon.value;
+    document.head.appendChild(link);
+  }
+}
+
+if(user==="hxebdebs55"){
+  adminPanel.style.display="block";
+}
+
+function addGame(){
+  data.games.push({
+    name:gName.value,
+    url:gUrl.value,
+    cat:gCat.value
+  });
+  save();
+  location.reload();
 }
 
 function resetAll(){
