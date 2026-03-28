@@ -4,131 +4,166 @@
   <title>Google Classroom</title>
 
   <style>
-    :root {
-      --bg:#0f172a;
-      --card:#1e293b;
-      --hover:#334155;
-      --text:white;
+    :root{
+      --bg:#0b1120;
+      --sidebar:#020617;
+      --card:#111827;
+      --hover:#1f2937;
+      --text:#e5e7eb;
+      --accent:#3b82f6;
     }
 
-    body {
+    body{
       margin:0;
-      font-family:Arial;
+      font-family:Inter, Arial;
+      display:flex;
       background:var(--bg);
       color:var(--text);
     }
 
-    header {
+    /* SIDEBAR */
+    .sidebar{
+      width:220px;
+      background:var(--sidebar);
+      padding:15px;
       display:flex;
-      justify-content:space-between;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .logo{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .nav-btn{
       padding:10px;
-      background:#020617;
-      align-items:center;
-    }
-
-    input,button {
-      padding:6px;
-      border:none;
-      border-radius:6px;
-    }
-
-    .games-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-      gap:15px;
-      padding:20px;
-    }
-
-    .game-card {
-      background:var(--card);
-      padding:10px;
-      border-radius:12px;
+      border-radius:10px;
       cursor:pointer;
-      text-align:center;
-      transition:0.2s;
-      position:relative;
     }
 
-    .game-card:hover {
-      transform:scale(1.05);
+    .nav-btn:hover{
       background:var(--hover);
     }
 
-    .fav {
-      position:absolute;
-      right:8px;
-      top:5px;
-    }
-
-    .filters {
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:center;
-      padding:10px;
-    }
-
-    .modal {
-      position:fixed;
-      width:100%;
-      height:100%;
-      background:black;
-      top:0;
-      left:0;
+    /* MAIN */
+    .main{
+      flex:1;
       display:flex;
       flex-direction:column;
     }
 
-    iframe {flex:1;border:none;}
-    .hidden {display:none;}
+    header{
+      padding:15px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid #1f2937;
+    }
 
-    /* 🔥 SETTINGS FIX */
-    .panel {
+    input{
+      width:350px;
+      padding:10px;
+      border-radius:10px;
+      border:none;
+      background:#111827;
+      color:white;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .tab{
+      padding:6px 12px;
+      border-radius:999px;
+      background:var(--card);
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .tab.active{
+      background:var(--accent);
+    }
+
+    .grid{
+      padding:20px;
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:20px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:16px;
+      padding:20px;
+      text-align:center;
+      cursor:pointer;
+      position:relative;
+      transition:0.2s;
+    }
+
+    .card:hover{
+      transform:translateY(-6px);
+      background:var(--hover);
+      box-shadow:0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .fav{
+      position:absolute;
+      top:8px;
+      right:10px;
+      cursor:pointer;
+    }
+
+    /* MODAL */
+    .modal{
       position:fixed;
-      top:0; /* FIXED */
+      inset:0;
+      background:black;
+      display:flex;
+      flex-direction:column;
+    }
+
+    iframe{flex:1;border:none;}
+    .hidden{display:none;}
+
+    /* SETTINGS */
+    .panel{
+      position:fixed;
       right:-320px;
+      top:0;
       width:300px;
       height:100%;
       background:#020617;
       padding:15px;
       transition:0.3s;
-      overflow-y:auto;
-      z-index:1000;
     }
 
-    .panel.open {right:0;}
+    .panel.open{right:0;}
 
-    .login {
+    /* LOADER */
+    #loader{
       position:fixed;
-      top:40%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      background:#020617;
-      padding:20px;
-      border-radius:10px;
-    }
-
-    /* 🔥 LOADING SCREEN */
-    #loader {
-      position:fixed;
-      width:100%;
-      height:100%;
+      inset:0;
       background:black;
       display:flex;
       justify-content:center;
       align-items:center;
       font-size:30px;
-      z-index:2000;
       opacity:0;
       pointer-events:none;
       transition:0.3s;
     }
 
-    #loader.show {
+    #loader.show{
       opacity:1;
       pointer-events:auto;
     }
-
   </style>
 </head>
 
@@ -136,26 +171,24 @@
 
 <div id="loader">Loading...</div>
 
-<header>
-  <input id="search" placeholder="Search...">
+<div class="sidebar">
+  <div class="logo">🎮 Games</div>
+  <div class="nav-btn" onclick="setTab('all')">🏠 Home</div>
+  <div class="nav-btn" onclick="setTab('favorites')">⭐ Favorites</div>
+  <div class="nav-btn" onclick="setTab('recent')">🕒 Recent</div>
+  <div class="nav-btn" onclick="openProxy()">🌐 Proxy</div>
+  <div class="nav-btn" onclick="togglePanel()">⚙️ Settings</div>
+</div>
 
-  <div>
-    <button onclick="render()">🏠</button>
-    <button onclick="showFavorites()">⭐</button>
-    <button onclick="openProxy()">🌐</button>
-    <button onclick="togglePanel()">⚙️</button>
-    <span id="userDisplay"></span>
-  </div>
+<div class="main">
+
+<header>
+  <input id="search" placeholder="Search games...">
+  <div class="tabs" id="tabs"></div>
 </header>
 
-<div class="filters" id="filters"></div>
-<div class="games-grid" id="grid"></div>
+<div id="grid" class="grid"></div>
 
-<!-- LOGIN -->
-<div id="loginBox" class="login">
-  <h3>Username</h3>
-  <input id="username">
-  <button onclick="login()">Enter</button>
 </div>
 
 <!-- GAME -->
@@ -180,82 +213,128 @@
 
 <!-- SETTINGS -->
 <div id="panel" class="panel">
-  <h3>🎨 Colors</h3>
-  BG <input type="color" id="bgPick"><br>
-  Card <input type="color" id="cardPick"><br>
-  Text <input type="color" id="textPick"><br>
-
-  <h3>🕵️ Cloak</h3>
-  Title <input id="cloakTitle"><br>
-  Icon URL <input id="cloakIcon"><br>
-  <button onclick="applyCloak()">Apply</button>
-
-  <div id="adminPanel" style="display:none;">
-    <h3>👑 Admin</h3>
-    Name <input id="gName"><br>
-    URL <input id="gUrl"><br>
-    Category <input id="gCat"><br>
-    <button onclick="addGame()">Add Game</button>
-  </div>
-
-  <button onclick="resetAll()">Reset</button>
+  <h3>Theme</h3>
+  BG <input type="color" id="bgPick"><br><br>
+  Card <input type="color" id="cardPick"><br><br>
+  Text <input type="color" id="textPick"><br><br>
 </div>
 
 <script>
+const grid = document.getElementById("grid");
+const tabs = document.getElementById("tabs");
+const frame = document.getElementById("frame");
+const modal = document.getElementById("modal");
+const proxyBox = document.getElementById("proxyBox");
+const proxyFrame = document.getElementById("proxyFrame");
+const proxyUrl = document.getElementById("proxyUrl");
 const loader = document.getElementById("loader");
 
-function showLoader(){
-  loader.classList.add("show");
-}
-function hideLoader(){
-  setTimeout(()=>loader.classList.remove("show"),500);
-}
+/* STATE */
+let currentTab="all";
+let favorites=JSON.parse(localStorage.getItem("fav")||"[]");
+let recent=JSON.parse(localStorage.getItem("recent")||"[]");
+let settings=JSON.parse(localStorage.getItem("settings")||"{}");
 
-const grid=document.getElementById("grid");
-const modal=document.getElementById("modal");
-const frame=document.getElementById("frame");
-const proxyBox=document.getElementById("proxyBox");
-const proxyFrame=document.getElementById("proxyFrame");
-const proxyUrl=document.getElementById("proxyUrl");
-const panel=document.getElementById("panel");
-const adminPanel=document.getElementById("adminPanel");
-
-/* USER */
-let user=localStorage.getItem("user");
-if(user){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("userDisplay").innerText=user;
+/* SETTINGS */
+function applySettings(){
+  if(settings.bg) document.body.style.background=settings.bg;
+  if(settings.card) document.documentElement.style.setProperty("--card",settings.card);
+  if(settings.text) document.body.style.color=settings.text;
 }
+function saveSettings(){localStorage.setItem("settings",JSON.stringify(settings));}
+
+bgPick.oninput=e=>{settings.bg=e.target.value;applySettings();saveSettings();}
+cardPick.oninput=e=>{settings.card=e.target.value;applySettings();saveSettings();}
+textPick.oninput=e=>{settings.text=e.target.value;applySettings();saveSettings();}
+
+/* LOADER */
+function showLoader(){loader.classList.add("show");}
+function hideLoader(){setTimeout(()=>loader.classList.remove("show"),300);}
 
 /* GAMES */
 let games=[
-  {name:"Slope",url:"https://3kh0.github.io/projects/slope/"},
-  {name:"Run 3",url:"https://3kh0.github.io/projects/run3/"},
-  {name:"YoHoHo.io",url:"https://yohoho.io"},
-  {name:"Crazy Cattle 3D",url:"https://crazy-cattle.github.io/"},
-  {name:"Krunker",url:"https://krunker.io"},
-  ...Array.from({length:50},(_,i)=>({
-    name:"Game "+(i+1),
-    url:"https://3kh0.github.io/projects/slope/"
-  }))
+  {name:"Slope",cat:"Arcade",url:"https://3kh0.github.io/projects/slope/"},
+  {name:"Run 3",cat:"Arcade",url:"https://3kh0.github.io/projects/run3/"},
+  {name:"Krunker",cat:"Shooter",url:"https://krunker.io"},
+  {name:"YoHoHo.io",cat:"Multiplayer",url:"https://yohoho.io"},
+  {name:"Crazy Cattle 3D",cat:"3D",url:"https://crazy-cattle.github.io/"},
+  {name:"Drift Hunters",cat:"Driving",url:"https://3kh0.github.io/projects/drift-hunters/"},
+  {name:"Moto X3M",cat:"Driving",url:"https://3kh0.github.io/projects/motox3m/"},
+  {name:"Tunnel Rush",cat:"Arcade",url:"https://3kh0.github.io/projects/tunnel-rush/"}
 ];
+
+/* TABS */
+function buildTabs(){
+  let cats=["all","favorites","recent",...new Set(games.map(g=>g.cat))];
+  tabs.innerHTML="";
+  cats.forEach(c=>{
+    let t=document.createElement("div");
+    t.className="tab"+(c===currentTab?" active":"");
+    t.innerText=c;
+    t.onclick=()=>setTab(c);
+    tabs.appendChild(t);
+  });
+}
+
+function setTab(t){
+  currentTab=t;
+  buildTabs();
+  render();
+}
+
+/* FAVORITES */
+function toggleFav(e,name){
+  e.stopPropagation();
+  if(favorites.includes(name)){
+    favorites=favorites.filter(f=>f!==name);
+  } else favorites.push(name);
+  localStorage.setItem("fav",JSON.stringify(favorites));
+  render();
+}
 
 /* RENDER */
 function render(){
   grid.innerHTML="";
-  games.forEach(g=>{
+  let list=games;
+
+  if(currentTab==="favorites") list=games.filter(g=>favorites.includes(g.name));
+  else if(currentTab==="recent") list=games.filter(g=>recent.includes(g.name));
+  else if(currentTab!=="all") list=games.filter(g=>g.cat===currentTab);
+
+  let q=search.value?.toLowerCase()||"";
+  list=list.filter(g=>g.name.toLowerCase().includes(q));
+
+  list.forEach(g=>{
     let d=document.createElement("div");
-    d.className="game-card";
-    d.innerHTML=`<p>${g.name}</p>`;
+    d.className="card";
+
+    d.innerHTML=`
+      <div class="fav" onclick="toggleFav(event,'${g.name}')">
+        ${favorites.includes(g.name)?"⭐":"☆"}
+      </div>
+      <p>${g.name}</p>
+    `;
+
     d.onclick=()=>{
       showLoader();
       frame.src=g.url;
       modal.classList.remove("hidden");
+
+      if(!recent.includes(g.name)){
+        recent.unshift(g.name);
+        recent=recent.slice(0,10);
+        localStorage.setItem("recent",JSON.stringify(recent));
+      }
+
       frame.onload=hideLoader;
     };
+
     grid.appendChild(d);
   });
 }
+
+/* SEARCH */
+search.oninput=render;
 
 /* GAME */
 function closeGame(){
@@ -269,26 +348,19 @@ function closeProxy(){proxyBox.classList.add("hidden");}
 
 function loadProxy(){
   showLoader();
-  let val=proxyUrl.value;
-
-  if(val.includes(".")){
-    proxyFrame.src=val.startsWith("http")?val:"https://"+val;
-  } else {
-    proxyFrame.src="https://www.google.com/search?q="+encodeURIComponent(val);
-  }
-
+  let v=proxyUrl.value;
+  proxyFrame.src=v.includes(".")?v:"https://www.google.com/search?q="+v;
   proxyFrame.onload=hideLoader;
 }
 
-/* PANEL */
-function togglePanel(){panel.classList.toggle("open");}
-
-/* ADMIN */
-if(user==="hxebdebs55"){
-  adminPanel.style.display="block";
+/* SETTINGS PANEL */
+function togglePanel(){
+  document.getElementById("panel").classList.toggle("open");
 }
 
 /* INIT */
+applySettings();
+buildTabs();
 render();
 </script>
 
