@@ -1,19 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Unblocked Games</title>
+  <title>Google Classroom</title>
 
   <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --hover: #334155;
+      --text: white;
+    }
+
     body {
       margin: 0;
       font-family: Arial;
-      background: #0f172a;
-      color: white;
+      background: var(--bg);
+      color: var(--text);
     }
 
-    h1 {
-      text-align: center;
-      padding: 15px;
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: #020617;
+    }
+
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      width: 200px;
+    }
+
+    button {
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .games-grid {
@@ -24,124 +47,246 @@
     }
 
     .game-card {
-      background: #1e293b;
+      background: var(--card);
       border-radius: 12px;
       padding: 10px;
       cursor: pointer;
       transition: 0.2s;
       text-align: center;
+      position: relative;
     }
 
     .game-card:hover {
       transform: scale(1.05);
-      background: #334155;
+      background: var(--hover);
     }
 
-    .game-card img {
-      width: 100%;
-      border-radius: 10px;
+    .fav {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      cursor: pointer;
+      font-size: 18px;
     }
 
     .modal {
       position: fixed;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       background: black;
+      top: 0;
+      left: 0;
       display: flex;
       flex-direction: column;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
-    .modal iframe {
+    iframe {
       flex: 1;
       border: none;
     }
 
-    .top-bar {
+    .topbar {
       display: flex;
       justify-content: space-between;
       padding: 10px;
-      background: #020617;
-    }
-
-    .top-bar button {
-      background: red;
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 6px;
+      background: black;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>🎮 Unblocked Games</h1>
-
-  <div class="games-grid" id="gamesGrid"></div>
-
-  <!-- FULLSCREEN GAME -->
-  <div id="gameModal" class="modal hidden">
-    <div class="top-bar">
-      <span id="gameTitle">Game</span>
-      <button onclick="closeGame()">Exit</button>
-    </div>
-    <iframe id="gameFrame"></iframe>
+<header>
+  <input id="search" placeholder="Search games...">
+  
+  <div>
+    <button onclick="render()">🏠 Home</button>
+    <button onclick="showFavorites()">⭐ Favorites</button>
+    <button onclick="customizeColors()">🎨 Colors</button>
+    <button onclick="cloakMenu()">🕵️ Cloak</button>
+    <button onclick="resetSettings()">♻ Reset</button>
   </div>
+</header>
 
-  <script>
-    const games = [
-      {name: "Slope", url: "https://3kh0.github.io/projects/slope/", img: "https://via.placeholder.com/150"},
-      {name: "Run 3", url: "https://3kh0.github.io/projects/run3/", img: "https://via.placeholder.com/150"},
-      {name: "Moto X3M", url: "https://3kh0.github.io/projects/motox3m/", img: "https://via.placeholder.com/150"},
-      {name: "Minecraft Classic", url: "https://classic.minecraft.net/", img: "https://via.placeholder.com/150"},
-      {name: "Tetris", url: "https://3kh0.github.io/projects/tetris/", img: "https://via.placeholder.com/150"},
-      {name: "Drift Hunters", url: "https://3kh0.github.io/projects/drift-hunters/", img: "https://via.placeholder.com/150"},
-      {name: "Basketball Stars", url: "https://3kh0.github.io/projects/basketball-stars/", img: "https://via.placeholder.com/150"},
-      {name: "Tunnel Rush", url: "https://3kh0.github.io/projects/tunnel-rush/", img: "https://via.placeholder.com/150"},
-      {name: "Retro Bowl", url: "https://3kh0.github.io/projects/retro-bowl/", img: "https://via.placeholder.com/150"},
-      {name: "Snow Rider 3D", url: "https://3kh0.github.io/projects/snow-rider-3d/", img: "https://via.placeholder.com/150"},
+<div class="games-grid" id="grid"></div>
 
-      // quick way to add more
-      ...Array.from({length: 20}, (_, i) => ({
-        name: "Extra Game " + (i+1),
-        url: "https://3kh0.github.io/projects/slope/",
-        img: "https://via.placeholder.com/150"
-      }))
-    ];
+<!-- GAME MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="topbar">
+    <span id="title"></span>
+    <button onclick="closeGame()">Exit</button>
+  </div>
+  <iframe id="frame"></iframe>
+</div>
 
-    const grid = document.getElementById("gamesGrid");
+<script>
+let games = [
+  {name:"Slope", url:"https://3kh0.github.io/projects/slope/", cat:"Arcade"},
+  {name:"Run 3", url:"https://3kh0.github.io/projects/run3/", cat:"Arcade"},
+  {name:"Moto X3M", url:"https://3kh0.github.io/projects/motox3m/", cat:"Driving"},
+  {name:"Minecraft Classic", url:"https://classic.minecraft.net/", cat:"Sandbox"},
+  {name:"Tetris", url:"https://3kh0.github.io/projects/tetris/", cat:"Puzzle"},
+  {name:"Drift Hunters", url:"https://3kh0.github.io/projects/drift-hunters/", cat:"Driving"},
+  {name:"Basketball Stars", url:"https://3kh0.github.io/projects/basketball-stars/", cat:"Sports"},
+  {name:"Tunnel Rush", url:"https://3kh0.github.io/projects/tunnel-rush/", cat:"Arcade"},
+  {name:"Retro Bowl", url:"https://3kh0.github.io/projects/retro-bowl/", cat:"Sports"},
+  {name:"Snow Rider 3D", url:"https://3kh0.github.io/projects/snow-rider-3d/", cat:"Arcade"},
+  {name:"Stickman Hook", url:"https://3kh0.github.io/projects/stickman-hook/", cat:"Arcade"},
+  {name:"Subway Surfers", url:"https://3kh0.github.io/projects/subway-surfers/", cat:"Arcade"},
+  {name:"Temple Run 2", url:"https://3kh0.github.io/projects/temple-run-2/", cat:"Arcade"},
+  {name:"Fireboy & Watergirl", url:"https://3kh0.github.io/projects/fireboy-watergirl-forest/", cat:"Puzzle"},
+  {name:"FNF", url:"https://3kh0.github.io/projects/fnf/", cat:"Music"},
+  {name:"Geometry Dash", url:"https://3kh0.github.io/projects/geometry-dash/", cat:"Arcade"},
+  {name:"1v1.LOL", url:"https://3kh0.github.io/projects/1v1lol/", cat:"Shooter"},
+  {name:"Shell Shockers", url:"https://3kh0.github.io/projects/shell-shockers/", cat:"Shooter"},
+  {name:"Krunker", url:"https://krunker.io/", cat:"Shooter"},
+  {name:"Paper.io 2", url:"https://3kh0.github.io/projects/paper-io-2/", cat:"Arcade"},
 
-    games.forEach(game => {
-      const card = document.createElement("div");
-      card.className = "game-card";
+  ...Array.from({length: 40}, (_, i) => ({
+    name: "Arcade Game " + (i+1),
+    url: "https://3kh0.github.io/projects/slope/",
+    cat: "Arcade"
+  }))
+];
 
-      card.innerHTML = `
-        <img src="${game.img}">
-        <p>${game.name}</p>
-      `;
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let settings = JSON.parse(localStorage.getItem("settings") || "{}");
 
-      card.onclick = () => openGame(game);
-      grid.appendChild(card);
-    });
+function applySettings(){
+  if(settings.bg) document.documentElement.style.setProperty("--bg", settings.bg);
+  if(settings.card) document.documentElement.style.setProperty("--card", settings.card);
+  if(settings.text) document.documentElement.style.setProperty("--text", settings.text);
 
-    function openGame(game) {
-      document.getElementById("gameFrame").src = game.url;
-      document.getElementById("gameTitle").innerText = game.name;
-      document.getElementById("gameModal").classList.remove("hidden");
-    }
+  if(settings.title) document.title = settings.title;
 
-    function closeGame() {
-      document.getElementById("gameModal").classList.add("hidden");
-      document.getElementById("gameFrame").src = "";
-    }
-  </script>
+  if(settings.icon){
+    let link = document.querySelector("link[rel='icon']") || document.createElement("link");
+    link.rel = "icon";
+    link.href = settings.icon;
+    document.head.appendChild(link);
+  }
+}
+
+function saveSettings(){
+  localStorage.setItem("settings", JSON.stringify(settings));
+}
+
+function render(list = games) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  list.forEach(g => {
+    const div = document.createElement("div");
+    div.className = "game-card";
+
+    const isFav = favorites.includes(g.name);
+
+    div.innerHTML = `
+      <div class="fav" onclick="toggleFav(event,'${g.name}')">
+        ${isFav ? "⭐" : "☆"}
+      </div>
+      <div style="font-size:20px;">🎮</div>
+      <p>${g.name}</p>
+      <small>${g.cat}</small>
+    `;
+
+    div.onclick = () => openGame(g);
+    grid.appendChild(div);
+  });
+}
+
+function openGame(g) {
+  document.getElementById("frame").src = g.url;
+  document.getElementById("title").innerText = g.name;
+  document.getElementById("modal").classList.remove("hidden");
+}
+
+function closeGame() {
+  document.getElementById("modal").classList.add("hidden");
+  document.getElementById("frame").src = "";
+}
+
+function toggleFav(e, name) {
+  e.stopPropagation();
+
+  if (favorites.includes(name)) {
+    favorites = favorites.filter(f => f !== name);
+  } else {
+    favorites.push(name);
+  }
+
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  render();
+}
+
+function showFavorites() {
+  render(games.filter(g => favorites.includes(g.name)));
+}
+
+document.getElementById("search").oninput = function () {
+  const q = this.value.toLowerCase();
+  render(games.filter(g => g.name.toLowerCase().includes(q)));
+};
+
+function customizeColors(){
+  settings.bg = prompt("Background color:", settings.bg || "#0f172a");
+  settings.card = prompt("Card color:", settings.card || "#1e293b");
+  settings.text = prompt("Text color:", settings.text || "white");
+
+  saveSettings();
+  applySettings();
+}
+
+function cloakMenu(){
+  let choice = prompt(
+`Tab Cloak Options:
+
+1 = Google
+2 = Classroom
+3 = Drive
+4 = Blank
+5 = Custom`
+  );
+
+  if(choice == "1"){
+    settings.title = "Google";
+    settings.icon = "https://www.google.com/favicon.ico";
+  }
+
+  if(choice == "2"){
+    settings.title = "Google Classroom";
+    settings.icon = "https://ssl.gstatic.com/classroom/favicon.png";
+  }
+
+  if(choice == "3"){
+    settings.title = "Google Drive";
+    settings.icon = "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
+  }
+
+  if(choice == "4"){
+    settings.title = "New Tab";
+    settings.icon = "";
+  }
+
+  if(choice == "5"){
+    settings.title = prompt("Enter tab title:");
+    settings.icon = prompt("Enter icon URL:");
+  }
+
+  saveSettings();
+  applySettings();
+}
+
+function resetSettings(){
+  localStorage.removeItem("settings");
+  location.reload();
+}
+
+applySettings();
+render();
+</script>
 
 </body>
 </html>
