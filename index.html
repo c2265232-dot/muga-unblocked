@@ -26,7 +26,7 @@
       align-items:center;
     }
 
-    input, button {
+    input,button {
       padding:6px;
       border:none;
       border-radius:6px;
@@ -44,9 +44,9 @@
       padding:10px;
       border-radius:12px;
       cursor:pointer;
-      position:relative;
       text-align:center;
       transition:0.2s;
+      position:relative;
     }
 
     .game-card:hover {
@@ -58,15 +58,14 @@
       position:absolute;
       right:8px;
       top:5px;
-      cursor:pointer;
     }
 
     .filters {
       display:flex;
       gap:10px;
-      padding:10px;
-      justify-content:center;
       flex-wrap:wrap;
+      justify-content:center;
+      padding:10px;
     }
 
     .modal {
@@ -80,17 +79,21 @@
       flex-direction:column;
     }
 
-    .hidden {display:none;}
     iframe {flex:1;border:none;}
+    .hidden {display:none;}
 
+    /* 🔥 SETTINGS FIX */
     .panel {
       position:fixed;
+      top:0; /* FIXED */
       right:-320px;
       width:300px;
       height:100%;
       background:#020617;
       padding:15px;
       transition:0.3s;
+      overflow-y:auto;
+      z-index:1000;
     }
 
     .panel.open {right:0;}
@@ -104,10 +107,34 @@
       padding:20px;
       border-radius:10px;
     }
+
+    /* 🔥 LOADING SCREEN */
+    #loader {
+      position:fixed;
+      width:100%;
+      height:100%;
+      background:black;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:30px;
+      z-index:2000;
+      opacity:0;
+      pointer-events:none;
+      transition:0.3s;
+    }
+
+    #loader.show {
+      opacity:1;
+      pointer-events:auto;
+    }
+
   </style>
 </head>
 
 <body>
+
+<div id="loader">Loading...</div>
 
 <header>
   <input id="search" placeholder="Search...">
@@ -143,8 +170,9 @@
 <!-- PROXY -->
 <div id="proxyBox" class="modal hidden">
   <div>
-    <input id="proxyUrl" placeholder="Enter URL">
+    <input id="proxyUrl" placeholder="Search or URL">
     <button onclick="loadProxy()">Go</button>
+    <button onclick="proxyFrame.requestFullscreen()">⛶</button>
     <button onclick="closeProxy()">Exit</button>
   </div>
   <iframe id="proxyFrame"></iframe>
@@ -174,92 +202,60 @@
 </div>
 
 <script>
-const grid = document.getElementById("grid");
-const filters = document.getElementById("filters");
-const modal = document.getElementById("modal");
-const frame = document.getElementById("frame");
-const search = document.getElementById("search");
-const panel = document.getElementById("panel");
-const adminPanel = document.getElementById("adminPanel");
-const loginBox = document.getElementById("loginBox");
-const usernameInput = document.getElementById("username");
-const userDisplay = document.getElementById("userDisplay");
-const proxyBox = document.getElementById("proxyBox");
-const proxyFrame = document.getElementById("proxyFrame");
-const proxyUrl = document.getElementById("proxyUrl");
+const loader = document.getElementById("loader");
+
+function showLoader(){
+  loader.classList.add("show");
+}
+function hideLoader(){
+  setTimeout(()=>loader.classList.remove("show"),500);
+}
+
+const grid=document.getElementById("grid");
+const modal=document.getElementById("modal");
+const frame=document.getElementById("frame");
+const proxyBox=document.getElementById("proxyBox");
+const proxyFrame=document.getElementById("proxyFrame");
+const proxyUrl=document.getElementById("proxyUrl");
+const panel=document.getElementById("panel");
+const adminPanel=document.getElementById("adminPanel");
 
 /* USER */
-let user = localStorage.getItem("user");
+let user=localStorage.getItem("user");
 if(user){
-  loginBox.style.display="none";
-  userDisplay.innerText=user;
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("userDisplay").innerText=user;
 }
-
-function login(){
-  user = usernameInput.value;
-  localStorage.setItem("user", user);
-  location.reload();
-}
-
-/* DATA */
-let key = "data_" + user;
-let data = JSON.parse(localStorage.getItem(key) || "{}");
-data.fav = data.fav || [];
-data.games = data.games || [];
 
 /* GAMES */
-let games = [
-  {name:"Slope",url:"https://3kh0.github.io/projects/slope/",cat:"Arcade"},
-  {name:"Run 3",url:"https://3kh0.github.io/projects/run3/",cat:"Arcade"},
-  {name:"YoHoHo.io",url:"https://yohoho.io",cat:"Multiplayer"},
-  {name:"Crazy Cattle 3D",url:"https://crazy-cattle.github.io/",cat:"3D"},
-  {name:"Krunker",url:"https://krunker.io",cat:"Shooter"},
-  ...Array.from({length:40},(_,i)=>({
+let games=[
+  {name:"Slope",url:"https://3kh0.github.io/projects/slope/"},
+  {name:"Run 3",url:"https://3kh0.github.io/projects/run3/"},
+  {name:"YoHoHo.io",url:"https://yohoho.io"},
+  {name:"Crazy Cattle 3D",url:"https://crazy-cattle.github.io/"},
+  {name:"Krunker",url:"https://krunker.io"},
+  ...Array.from({length:50},(_,i)=>({
     name:"Game "+(i+1),
-    url:"https://3kh0.github.io/projects/slope/",
-    cat:"Arcade"
-  })),
-  ...data.games
+    url:"https://3kh0.github.io/projects/slope/"
+  }))
 ];
 
 /* RENDER */
-function render(list=games){
+function render(){
   grid.innerHTML="";
-  list.forEach(g=>{
+  games.forEach(g=>{
     let d=document.createElement("div");
     d.className="game-card";
-
-    d.innerHTML=`
-      <div class="fav" onclick="fav(event,'${g.name}')">
-        ${data.fav.includes(g.name)?"⭐":"☆"}
-      </div>
-      <p>${g.name}</p>
-    `;
-
-    d.onclick=()=>{frame.src=g.url;modal.classList.remove("hidden");};
+    d.innerHTML=`<p>${g.name}</p>`;
+    d.onclick=()=>{
+      showLoader();
+      frame.src=g.url;
+      modal.classList.remove("hidden");
+      frame.onload=hideLoader;
+    };
     grid.appendChild(d);
   });
 }
-
-/* FAVORITES */
-function fav(e,n){
-  e.stopPropagation();
-  if(data.fav.includes(n)){
-    data.fav=data.fav.filter(f=>f!=n);
-  } else data.fav.push(n);
-  localStorage.setItem(key,JSON.stringify(data));
-  render();
-}
-
-function showFavorites(){
-  render(games.filter(g=>data.fav.includes(g.name)));
-}
-
-/* SEARCH */
-search.oninput=()=>{
-  let q=search.value.toLowerCase();
-  render(games.filter(g=>g.name.toLowerCase().includes(q)));
-};
 
 /* GAME */
 function closeGame(){
@@ -270,49 +266,30 @@ function closeGame(){
 /* PROXY */
 function openProxy(){proxyBox.classList.remove("hidden");}
 function closeProxy(){proxyBox.classList.add("hidden");}
+
 function loadProxy(){
-  let url=proxyUrl.value;
-  if(!url.startsWith("http")) url="https://"+url;
-  proxyFrame.src=url;
+  showLoader();
+  let val=proxyUrl.value;
+
+  if(val.includes(".")){
+    proxyFrame.src=val.startsWith("http")?val:"https://"+val;
+  } else {
+    proxyFrame.src="https://www.google.com/search?q="+encodeURIComponent(val);
+  }
+
+  proxyFrame.onload=hideLoader;
 }
 
-/* SETTINGS */
+/* PANEL */
 function togglePanel(){panel.classList.toggle("open");}
-
-/* CLOAK */
-function applyCloak(){
-  document.title=document.getElementById("cloakTitle").value||document.title;
-}
 
 /* ADMIN */
 if(user==="hxebdebs55"){
   adminPanel.style.display="block";
 }
 
-function addGame(){
-  data.games.push({
-    name:gName.value,
-    url:gUrl.value,
-    cat:gCat.value
-  });
-  localStorage.setItem(key,JSON.stringify(data));
-  location.reload();
-}
-
-/* FILTERS */
-function buildFilters(){
-  let cats=[...new Set(games.map(g=>g.cat))];
-  cats.forEach(c=>{
-    let b=document.createElement("button");
-    b.innerText=c;
-    b.onclick=()=>render(games.filter(g=>g.cat==c));
-    filters.appendChild(b);
-  });
-}
-
 /* INIT */
 render();
-buildFilters();
 </script>
 
 </body>
