@@ -16,6 +16,7 @@
       font-family: Arial;
       background: var(--bg);
       color: var(--text);
+      transition: 0.3s;
     }
 
     header {
@@ -23,17 +24,17 @@
       justify-content: space-between;
       padding: 10px;
       background: #020617;
+      align-items: center;
     }
 
-    input {
-      padding: 8px;
+    input, select {
+      padding: 6px;
       border-radius: 6px;
       border: none;
-      width: 200px;
     }
 
     button {
-      padding: 8px;
+      padding: 6px 10px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -51,22 +52,29 @@
       border-radius: 12px;
       padding: 10px;
       cursor: pointer;
-      transition: 0.2s;
       text-align: center;
+      transition: 0.2s;
       position: relative;
     }
 
     .game-card:hover {
-      transform: scale(1.05);
+      transform: scale(1.07);
       background: var(--hover);
     }
 
     .fav {
       position: absolute;
-      top: 5px;
       right: 8px;
+      top: 5px;
       cursor: pointer;
-      font-size: 18px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
     }
 
     .modal {
@@ -80,212 +88,195 @@
       flex-direction: column;
     }
 
-    .hidden { display: none; }
+    .hidden { display:none; }
 
     iframe {
-      flex: 1;
-      border: none;
+      flex:1;
+      border:none;
     }
 
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background: black;
+    .panel {
+      position: fixed;
+      right: -320px;
+      width: 300px;
+      height: 100%;
+      background: #020617;
+      transition: 0.3s;
+      padding: 15px;
     }
+
+    .panel.open { right:0; }
+
+    .login {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      background: #020617;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
   </style>
 </head>
 
 <body>
 
 <header>
-  <input id="search" placeholder="Search games...">
-  
+  <input id="search" placeholder="Search...">
+
   <div>
-    <button onclick="render()">🏠 Home</button>
-    <button onclick="showFavorites()">⭐ Favorites</button>
-    <button onclick="customizeColors()">🎨 Colors</button>
-    <button onclick="cloakMenu()">🕵️ Cloak</button>
-    <button onclick="resetSettings()">♻ Reset</button>
+    <span id="userDisplay"></span>
+    <button onclick="showFavorites()">⭐</button>
+    <button onclick="togglePanel()">⚙️</button>
   </div>
 </header>
 
+<div class="filters" id="filters"></div>
 <div class="games-grid" id="grid"></div>
 
-<!-- GAME MODAL -->
+<!-- LOGIN -->
+<div id="loginBox" class="login">
+  <h3>Enter Username</h3>
+  <input id="username">
+  <button onclick="login()">Enter</button>
+</div>
+
+<!-- GAME -->
 <div id="modal" class="modal hidden">
-  <div class="topbar">
-    <span id="title"></span>
+  <div>
+    <button onclick="frame.requestFullscreen()">⛶</button>
     <button onclick="closeGame()">Exit</button>
   </div>
   <iframe id="frame"></iframe>
 </div>
 
+<!-- SETTINGS -->
+<div id="panel" class="panel">
+  <h3>Colors</h3>
+  BG <input type="color" id="bgPick"><br>
+  Card <input type="color" id="cardPick"><br>
+  Text <input type="color" id="textPick"><br>
+
+  <h3>Cloak</h3>
+  <select id="cloak">
+    <option value="none">None</option>
+    <option value="google">Google</option>
+    <option value="classroom">Classroom</option>
+  </select>
+  <button onclick="applyCloak()">Apply</button>
+
+  <button onclick="resetAll()">Reset</button>
+</div>
+
 <script>
-let games = [
-  {name:"Slope", url:"https://3kh0.github.io/projects/slope/", cat:"Arcade"},
-  {name:"Run 3", url:"https://3kh0.github.io/projects/run3/", cat:"Arcade"},
-  {name:"Moto X3M", url:"https://3kh0.github.io/projects/motox3m/", cat:"Driving"},
-  {name:"Minecraft Classic", url:"https://classic.minecraft.net/", cat:"Sandbox"},
-  {name:"Tetris", url:"https://3kh0.github.io/projects/tetris/", cat:"Puzzle"},
-  {name:"Drift Hunters", url:"https://3kh0.github.io/projects/drift-hunters/", cat:"Driving"},
-  {name:"Basketball Stars", url:"https://3kh0.github.io/projects/basketball-stars/", cat:"Sports"},
-  {name:"Tunnel Rush", url:"https://3kh0.github.io/projects/tunnel-rush/", cat:"Arcade"},
-  {name:"Retro Bowl", url:"https://3kh0.github.io/projects/retro-bowl/", cat:"Sports"},
-  {name:"Snow Rider 3D", url:"https://3kh0.github.io/projects/snow-rider-3d/", cat:"Arcade"},
-  {name:"Stickman Hook", url:"https://3kh0.github.io/projects/stickman-hook/", cat:"Arcade"},
-  {name:"Subway Surfers", url:"https://3kh0.github.io/projects/subway-surfers/", cat:"Arcade"},
-  {name:"Temple Run 2", url:"https://3kh0.github.io/projects/temple-run-2/", cat:"Arcade"},
-  {name:"Fireboy & Watergirl", url:"https://3kh0.github.io/projects/fireboy-watergirl-forest/", cat:"Puzzle"},
-  {name:"FNF", url:"https://3kh0.github.io/projects/fnf/", cat:"Music"},
-  {name:"Geometry Dash", url:"https://3kh0.github.io/projects/geometry-dash/", cat:"Arcade"},
-  {name:"1v1.LOL", url:"https://3kh0.github.io/projects/1v1lol/", cat:"Shooter"},
-  {name:"Shell Shockers", url:"https://3kh0.github.io/projects/shell-shockers/", cat:"Shooter"},
-  {name:"Krunker", url:"https://krunker.io/", cat:"Shooter"},
-  {name:"Paper.io 2", url:"https://3kh0.github.io/projects/paper-io-2/", cat:"Arcade"},
-
-  ...Array.from({length: 40}, (_, i) => ({
-    name: "Arcade Game " + (i+1),
-    url: "https://3kh0.github.io/projects/slope/",
-    cat: "Arcade"
-  }))
-];
-
-let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
-let settings = JSON.parse(localStorage.getItem("settings") || "{}");
-
-function applySettings(){
-  if(settings.bg) document.documentElement.style.setProperty("--bg", settings.bg);
-  if(settings.card) document.documentElement.style.setProperty("--card", settings.card);
-  if(settings.text) document.documentElement.style.setProperty("--text", settings.text);
-
-  if(settings.title) document.title = settings.title;
-
-  if(settings.icon){
-    let link = document.querySelector("link[rel='icon']") || document.createElement("link");
-    link.rel = "icon";
-    link.href = settings.icon;
-    document.head.appendChild(link);
-  }
+let user = localStorage.getItem("user");
+if(user){
+  loginBox.style.display="none";
+  userDisplay.innerText=user;
 }
 
-function saveSettings(){
-  localStorage.setItem("settings", JSON.stringify(settings));
-}
-
-function render(list = games) {
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  list.forEach(g => {
-    const div = document.createElement("div");
-    div.className = "game-card";
-
-    const isFav = favorites.includes(g.name);
-
-    div.innerHTML = `
-      <div class="fav" onclick="toggleFav(event,'${g.name}')">
-        ${isFav ? "⭐" : "☆"}
-      </div>
-      <div style="font-size:20px;">🎮</div>
-      <p>${g.name}</p>
-      <small>${g.cat}</small>
-    `;
-
-    div.onclick = () => openGame(g);
-    grid.appendChild(div);
-  });
-}
-
-function openGame(g) {
-  document.getElementById("frame").src = g.url;
-  document.getElementById("title").innerText = g.name;
-  document.getElementById("modal").classList.remove("hidden");
-}
-
-function closeGame() {
-  document.getElementById("modal").classList.add("hidden");
-  document.getElementById("frame").src = "";
-}
-
-function toggleFav(e, name) {
-  e.stopPropagation();
-
-  if (favorites.includes(name)) {
-    favorites = favorites.filter(f => f !== name);
-  } else {
-    favorites.push(name);
-  }
-
-  localStorage.setItem("fav", JSON.stringify(favorites));
-  render();
-}
-
-function showFavorites() {
-  render(games.filter(g => favorites.includes(g.name)));
-}
-
-document.getElementById("search").oninput = function () {
-  const q = this.value.toLowerCase();
-  render(games.filter(g => g.name.toLowerCase().includes(q)));
-};
-
-function customizeColors(){
-  settings.bg = prompt("Background color:", settings.bg || "#0f172a");
-  settings.card = prompt("Card color:", settings.card || "#1e293b");
-  settings.text = prompt("Text color:", settings.text || "white");
-
-  saveSettings();
-  applySettings();
-}
-
-function cloakMenu(){
-  let choice = prompt(
-`Tab Cloak Options:
-
-1 = Google
-2 = Classroom
-3 = Drive
-4 = Blank
-5 = Custom`
-  );
-
-  if(choice == "1"){
-    settings.title = "Google";
-    settings.icon = "https://www.google.com/favicon.ico";
-  }
-
-  if(choice == "2"){
-    settings.title = "Google Classroom";
-    settings.icon = "https://ssl.gstatic.com/classroom/favicon.png";
-  }
-
-  if(choice == "3"){
-    settings.title = "Google Drive";
-    settings.icon = "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
-  }
-
-  if(choice == "4"){
-    settings.title = "New Tab";
-    settings.icon = "";
-  }
-
-  if(choice == "5"){
-    settings.title = prompt("Enter tab title:");
-    settings.icon = prompt("Enter icon URL:");
-  }
-
-  saveSettings();
-  applySettings();
-}
-
-function resetSettings(){
-  localStorage.removeItem("settings");
+function login(){
+  user=username.value;
+  localStorage.setItem("user",user);
   location.reload();
 }
 
-applySettings();
+let key = "data_"+user;
+let data = JSON.parse(localStorage.getItem(key)||"{}");
+
+let games = [
+  {name:"Slope",url:"https://3kh0.github.io/projects/slope/",cat:"Arcade"},
+  {name:"Run 3",url:"https://3kh0.github.io/projects/run3/",cat:"Arcade"},
+  {name:"YoHoHo.io",url:"https://yohoho.io",cat:"Multiplayer"},
+  {name:"Crazy Cattle 3D",url:"https://github.com/search?q=crazy+cattle+3d&type=repositories",cat:"3D"},
+  {name:"Krunker",url:"https://krunker.io",cat:"Shooter"},
+  {name:"Shell Shockers",url:"https://3kh0.github.io/projects/shell-shockers/",cat:"Shooter"},
+
+  ...Array.from({length:50},(_,i)=>({
+    name:"Game "+(i+1),
+    url:"https://3kh0.github.io/projects/slope/",
+    cat:"Arcade"
+  }))
+];
+
+data.fav = data.fav || [];
+
+function save(){
+  localStorage.setItem(key,JSON.stringify(data));
+}
+
+function render(list=games){
+  grid.innerHTML="";
+  list.forEach(g=>{
+    let d=document.createElement("div");
+    d.className="game-card";
+
+    d.innerHTML=`
+      <div class="fav" onclick="fav(event,'${g.name}')">
+        ${data.fav.includes(g.name)?"⭐":"☆"}
+      </div>
+      <p>${g.name}</p>
+    `;
+
+    d.onclick=()=>{frame.src=g.url;modal.classList.remove("hidden");};
+    grid.appendChild(d);
+  });
+}
+
+function fav(e,n){
+  e.stopPropagation();
+  if(data.fav.includes(n)){
+    data.fav=data.fav.filter(f=>f!=n);
+  } else data.fav.push(n);
+  save();
+  render();
+}
+
+function showFavorites(){
+  render(games.filter(g=>data.fav.includes(g.name)));
+}
+
+search.oninput=()=>{
+  let q=search.value.toLowerCase();
+  render(games.filter(g=>g.name.toLowerCase().includes(q)));
+};
+
+function closeGame(){
+  modal.classList.add("hidden");
+  frame.src="";
+}
+
+function togglePanel(){
+  panel.classList.toggle("open");
+}
+
+bgPick.oninput=()=>{document.body.style.background=bgPick.value;}
+cardPick.oninput=()=>{document.documentElement.style.setProperty("--card",cardPick.value);}
+textPick.oninput=()=>{document.body.style.color=textPick.value;}
+
+function applyCloak(){
+  if(cloak.value=="google") document.title="Google";
+  if(cloak.value=="classroom") document.title="Google Classroom";
+}
+
+function resetAll(){
+  localStorage.clear();
+  location.reload();
+}
+
+function buildFilters(){
+  let cats=[...new Set(games.map(g=>g.cat))];
+  cats.forEach(c=>{
+    let b=document.createElement("button");
+    b.innerText=c;
+    b.onclick=()=>render(games.filter(g=>g.cat==c));
+    filters.appendChild(b);
+  });
+}
+
 render();
+buildFilters();
 </script>
 
 </body>
